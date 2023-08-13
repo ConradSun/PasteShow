@@ -38,10 +38,12 @@ struct MainView: View {
                     VStack(alignment: .leading) {
                         Section {
                             Label {
-                                Text(info.sourceURL!.lastPathComponent)
+                                let name = info.sourceURL!.lastPathComponent
+                                Text(name.replacingOccurrences(of: ".app", with: ""))
                                     .lineLimit(1)
                             } icon: {
-                                Image(nsImage: NSWorkspace.shared.icon(forFile: info.sourceURL!.path()))
+                                let path = info.sourceURL!.path().removingPercentEncoding
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: path!))
                                     .frame(height: 18)
                             }
                         } header: {
