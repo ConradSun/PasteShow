@@ -18,11 +18,21 @@
 
 <p align="center"><img src="https://raw.githubusercontent.com/ConradSun/PasteShow/main/Docs/PasteShow.png"></p>
 
+It supports previews of the following types
+
+- Text: plain text, rtf text, html text...
+- Image: jpeg, png, tiff ...
+- Other: anything that provides a Quick Look preview
+
 ## Documentation
 
 PasteShow is a tool primarily for macOS developers. It displays all types of currently copied data and provides a preview. You can right-clik on a type in the sidebar to list the menus supported.
-Right-click supports menus such as copying the selected data type and deleting data of the selected type.
+
+Right-click supports menus as below
+
+- Copying the selected type
+- Delete data of the selected type from the pasteboard.
 
 ## Download
 
-Only supports macOS 13 or later.
+PasteShow only supports macOS 13 or later. You con download the APP [here](https://github.com/ConradSun/PasteShow/releases)
