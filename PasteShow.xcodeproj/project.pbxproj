@@ -13,6 +13,7 @@
 		3A11B3DC2A82171B0023AD0E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3A11B3DB2A82171B0023AD0E /* Preview Assets.xcassets */; };
 		3A11B3E42A8219AF0023AD0E /* PasteboardManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A11B3E32A8219AF0023AD0E /* PasteboardManager.swift */; };
 		3ACB8A592A847B37001DDE30 /* ContentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ACB8A582A847B37001DDE30 /* ContentsView.swift */; };
+		3ADE2FE12A94A81A00E0C146 /* SplitView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ADE2FE02A94A81A00E0C146 /* SplitView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		3A11B3E32A8219AF0023AD0E /* PasteboardManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardManager.swift; sourceTree = "<group>"; };
 		3ACB8A582A847B37001DDE30 /* ContentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentsView.swift; sourceTree = "<group>"; };
 		3ACB8A5A2A847DF6001DDE30 /* PasteShow.entitlements */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.entitlements; path = PasteShow.entitlements; sourceTree = "<group>"; };
+		3ADE2FE02A94A81A00E0C146 /* SplitView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 			children = (
 				3A11B3D42A8217160023AD0E /* App.swift */,
 				3A11B3D62A8217160023AD0E /* MainView.swift */,
+				3ADE2FE02A94A81A00E0C146 /* SplitView.swift */,
 				3ACB8A582A847B37001DDE30 /* ContentsView.swift */,
 				3A11B3E32A8219AF0023AD0E /* PasteboardManager.swift */,
 				3A11B3D82A82171B0023AD0E /* Assets.xcassets */,
@@ -146,6 +149,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3A11B3D72A8217160023AD0E /* MainView.swift in Sources */,
+				3ADE2FE12A94A81A00E0C146 /* SplitView.swift in Sources */,
 				3A11B3E42A8219AF0023AD0E /* PasteboardManager.swift in Sources */,
 				3ACB8A592A847B37001DDE30 /* ContentsView.swift in Sources */,
 				3A11B3D52A8217160023AD0E /* App.swift in Sources */,
@@ -293,7 +297,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nuwastone.PasteShow;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -321,7 +325,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.nuwastone.PasteShow;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

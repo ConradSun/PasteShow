@@ -9,107 +9,81 @@ import SwiftUI
 import QuickLookUI
 import UniformTypeIdentifiers
 
-enum ContentsType {
-    case UTF8Text
-    case UTF16Text
-    case RTFText
-    case HTMLText
-    case Image
-    case Other
-}
-
 struct ContentsView: View {
+    @EnvironmentObject var status: NavigationStatus
     let itemType: String
     let itemData: Data
-    let utType: UTType
-
-    init(itemType: String, itemData: Data) {
-        self.itemType = itemType
-        self.itemData = itemData
-        self.utType = UTType(itemType) ?? .plainText
+    
+    func getPlainTextView(text: String) -> some View {
+        GeometryReader(content: { geometry in
+            Text(text)
+            Spacer()
+                .frame(width: geometry.size.width)
+        })
+        .onAppear {
+            status.titleString = itemType
+            status.subtitleString = String("\(itemData.count.formatted(.byteCount(style: .file)))")
+        }
     }
     
-    func getContentsType(itemType: String) -> ContentsType {
-        var contentsType = ContentsType.UTF8Text
-        
-        switch utType {
-        case .utf8PlainText, .url:
-            contentsType = .UTF8Text
-        case .utf16ExternalPlainText:
-            contentsType = .UTF16Text
-        case .rtf, .rtfd, .flatRTFD:
-            contentsType = .RTFText
-        case .html:
-            contentsType = .HTMLText
-        case .image:
-            contentsType = .Image      
-        default:
-            contentsType = .Other
-        }
-        
-        return contentsType
+    func getRichTextView(attrText: NSAttributedString) -> some View {
+        RichTextView(attrText: attrText)
+            .onAppear {
+                status.titleString = itemType
+                status.subtitleString = String("\(itemData.count.formatted(.byteCount(style: .file)))")
+            }
     }
 
     var body: some View {
-        let contentsType = getContentsType(itemType: itemType)
-        switch contentsType {
-        case .UTF8Text, .UTF16Text, .RTFText, .HTMLText:
-            CopiedTextView(textType: contentsType, textData: itemData)
-                .navigationSubtitle("\(itemData.count.formatted(.byteCount(style: .file)))")
-        case .Image:
+        let utType = UTType(itemType) ?? .plainText
+        switch utType {
+        case .utf8PlainText, .fileURL:
+            getPlainTextView(text: String(data: itemData, encoding: .utf8)!)
+        case .utf16ExternalPlainText:
+            getPlainTextView(text: String(data: itemData, encoding: .utf16)!)
+        case .rtf:
+            getRichTextView(attrText: NSAttributedString(rtf: itemData, documentAttributes: nil)!)
+        case .rtfd:
+            getRichTextView(attrText: NSAttributedString(rtfd: itemData, documentAttributes: nil)!)
+        case .flatRTFD:
+            getRichTextView(attrText: NSAttributedString(rtfd: itemData, documentAttributes: nil)!)
+        case .html:
+            getRichTextView(attrText: NSAttributedString(html: itemData, documentAttributes: nil)!)
+        case .png, .jpeg, .tiff, .bmp, .gif, .webP:
             let image = NSImage(data: itemData)!
             Image(nsImage: image)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: image.size.width, maxHeight: image.size.height)
-                .navigationSubtitle("\(Int(image.size.width)) * \(Int(image.size.height)) pixel")
+                .onAppear {
+                    status.titleString = itemType
+                    status.subtitleString = String("\(Int(image.size.width)) * \(Int(image.size.height)) pixel")
+                }
         default:
             QuickLookView(data: itemData, type: utType)
+                .onAppear {
+                    status.titleString = itemType
+                    status.subtitleString = ""
+                }
         }
     }
 }
 
-struct CopiedTextView: NSViewRepresentable {
+struct RichTextView: NSViewRepresentable {
     typealias NSViewType = NSScrollView
-    
-    let textType: ContentsType
-    let textData: Data
-    
-    func updateTextView(textView: UnsafePointer<NSTextView>) {
-        textView.pointee.textStorage?.setAttributedString(NSAttributedString())
-        
-        switch textType {
-        case .UTF8Text:
-            textView.pointee.string = String(data: textData, encoding: .utf8)
-            ?? "No Preview"
-        case .UTF16Text:
-            textView.pointee.string = String(data: textData, encoding: .utf16)
-            ?? "No Preview"
-        case .RTFText:
-            let attrText = NSAttributedString(rtf: textData, documentAttributes: nil)
-            ?? NSAttributedString(rtfd: textData, documentAttributes: nil)!
-            textView.pointee.textStorage?.setAttributedString(attrText)
-        case .HTMLText:
-            let attrText = NSAttributedString(html: textData, documentAttributes: nil)!
-            textView.pointee.textStorage?.setAttributedString(attrText)
-        default:
-            textView.pointee.string = "No Preview"
-        }
-    }
+    let attrText: NSAttributedString
     
     func makeNSView(context: Context) -> NSViewType {
         let scrollView = NSTextView.scrollableTextView()
-        var textView = scrollView.documentView as! NSTextView
-        
-        updateTextView(textView: &textView)
+        let textView = scrollView.documentView as! NSTextView
+        textView.textStorage?.setAttributedString(attrText)
         
         return scrollView
     }
     
     func updateNSView(_ nsView: NSViewType, context: Context) {
-        var textView = nsView.documentView as! NSTextView
-        
-        updateTextView(textView: &textView)
+        let textView = nsView.documentView as! NSTextView
+        textView.textStorage?.setAttributedString(attrText)
     }
 }
 

@@ -9,12 +9,10 @@ import SwiftUI
 
 @main
 struct PasteShowApp: App {
-    let manager = PasteboardManager.shared
-    
     var body: some Scene {
         WindowGroup {
             MainView()
-                .environmentObject(manager.copiedInfo)
+                .environmentObject(PasteboardManager.shared.pasteInfo)
         }
     }
 }

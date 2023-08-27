@@ -7,16 +7,39 @@
 
 import AppKit
 import Foundation
+import UniformTypeIdentifiers
 
-class CopiedInfo: ObservableObject, Identifiable {
-    @Published var changeCount = 0
-    @Published var sourceURL = URL(string: "")
-    @Published var copiedItems = [[String: Data]]()
+enum ItemType: String {
+    case Text = "Text"
+    case HTML = "HTML"
+    case File = "File"
+    case Image = "Image"
+    case URL = "URL"
+    case Other = "Other"
+}
+
+class PasteInfoList: ObservableObject {
+    struct PasteInfo {
+        var itemType = ItemType.Other
+        var sourceURL = URL(string: "")
+        var copiedItems = [[String: Data]]()
+    }
+    
+    @Published var infoList = [PasteInfo]()
+    
+    func appendInfo(source: URL, items: [[String: Data]], type: ItemType) {
+        var info = PasteInfo()
+        info.sourceURL = source
+        info.copiedItems = items
+        info.itemType = type
+        infoList.insert(info, at: 0)
+    }
 }
 
 class PasteboardManager {
     static let shared = PasteboardManager()
-    var copiedInfo = CopiedInfo()
+    var changeCount = 0
+    var pasteInfo = PasteInfoList()
     private let pasteboard = NSPasteboard.general
     private var observerTimer = Timer()
     
@@ -26,7 +49,7 @@ class PasteboardManager {
     
     private func setupObserverTimer() {
         observerTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true, block: { [self] _ in
-            guard copiedInfo.changeCount != pasteboard.changeCount else {
+            guard changeCount != pasteboard.changeCount else {
                 return
             }
             
@@ -35,15 +58,33 @@ class PasteboardManager {
     }
     
     private func onPasteboardChanged() {
-        copiedInfo.copiedItems.removeAll()
-        copiedInfo.changeCount = pasteboard.changeCount
+        var sourceURL = URL(string: "")
+        var copiedItems = [[String: Data]]()
+        var itemType = ItemType.Other
         
+        changeCount = pasteboard.changeCount
         guard pasteboard.pasteboardItems != nil else {
             return
         }
         
         if let frontApp = NSWorkspace.shared.frontmostApplication {
-            copiedInfo.sourceURL = frontApp.bundleURL
+            sourceURL = frontApp.bundleURL
+        }
+        
+        let utType = UTType(pasteboard.pasteboardItems!.first!.types.first!.rawValue) ?? .item
+        switch utType {
+        case .text, .plainText, .rtf, .rtfd, .utf8PlainText:
+            itemType = .Text
+        case .html:
+            itemType = .HTML
+        case .image, .png, .jpeg, .tiff, .bmp, .gif, .webP:
+            itemType = .Image
+        case .url:
+            itemType = .URL
+        case .fileURL:
+            itemType = .File
+        default:
+            itemType = .Other
         }
         
         for item in pasteboard.pasteboardItems! {
@@ -54,8 +95,9 @@ class PasteboardManager {
                     itemInfo[type.rawValue] = value
                 }
             }
-            copiedInfo.copiedItems.append(itemInfo)
+            copiedItems.append(itemInfo)
         }
+        pasteInfo.appendInfo(source: sourceURL!, items: copiedItems, type: itemType)
     }
     
     func setDataWithoutReserve(data: String, forType type: NSPasteboard.PasteboardType) {
@@ -63,19 +105,18 @@ class PasteboardManager {
         pasteboard.setString(data, forType: type)
     }
     
-    func removeDataWithReserve(data: Data, forType type: String) {
+    func refreshPasteItems(itemsIndex: Int) {
         var pasteItems = [NSPasteboardItem]()
         pasteboard.clearContents()
-        for items in copiedInfo.copiedItems {
+        
+        for items in pasteInfo.infoList[itemsIndex].copiedItems {
             let pasteItem = NSPasteboardItem()
             for pair in items {
-                if pair.key == type && pair.value == data {
-                    continue
-                }
                 pasteItem.setData(pair.value, forType: NSPasteboard.PasteboardType(pair.key))
             }
             pasteItems.append(pasteItem)
         }
+        pasteInfo.infoList.remove(at: itemsIndex)
         pasteboard.writeObjects(pasteItems)
     }
 }
