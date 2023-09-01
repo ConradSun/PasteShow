@@ -29,6 +29,7 @@ struct MainView: View {
     }
 }
 
-//#Preview {
-//    MainView()
-//}
+#Preview {
+    MainView()
+        .environmentObject(PasteboardManager.shared.pasteInfo)
+}
