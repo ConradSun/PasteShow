@@ -71,7 +71,9 @@ class PasteboardManager {
             sourceURL = frontApp.bundleURL
         }
         
-        let utType = UTType(pasteboard.pasteboardItems!.first!.types.first!.rawValue) ?? .item
+        let pasteType = pasteboard.pasteboardItems?.first?.types.first?.rawValue
+        let utType = UTType(pasteType ?? "public.item") ?? .item
+        
         switch utType {
         case .text, .plainText, .rtf, .rtfd, .utf8PlainText:
             itemType = .Text

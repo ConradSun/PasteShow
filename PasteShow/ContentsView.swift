@@ -17,6 +17,7 @@ struct ContentsView: View {
     func getPlainTextView(text: String) -> some View {
         GeometryReader(content: { geometry in
             Text(text)
+                .padding(.leading, 4)
             Spacer()
                 .frame(width: geometry.size.width)
         })
