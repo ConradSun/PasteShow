@@ -18,6 +18,11 @@ enum ItemType: String {
     case Other = "Other"
 }
 
+enum PasteboardType: String, CaseIterable {
+    case General = "General"
+    case Drag = "Drag"
+}
+
 class PasteInfoList: ObservableObject {
     struct PasteInfo {
         var itemType = ItemType.Other
@@ -25,6 +30,7 @@ class PasteInfoList: ObservableObject {
         var copiedItems = [[String: Data]]()
     }
     
+    @Published var boardType = "General"
     @Published var infoList = [PasteInfo]()
     
     func appendInfo(source: URL, items: [[String: Data]], type: ItemType) {
@@ -40,11 +46,12 @@ class PasteboardManager {
     static let shared = PasteboardManager()
     var changeCount = 0
     var pasteInfo = PasteInfoList()
-    private let pasteboard = NSPasteboard.general
+    
+    private var pasteboard = NSPasteboard.init(name: .general)
     private var observerTimer = Timer()
     
     private init() {
-        setupObserverTimer()
+        setupPasteboardType(type: pasteInfo.boardType)
     }
     
     private func setupObserverTimer() {
@@ -100,6 +107,25 @@ class PasteboardManager {
             copiedItems.append(itemInfo)
         }
         pasteInfo.appendInfo(source: sourceURL!, items: copiedItems, type: itemType)
+    }
+    
+    private func getBoardType(_ type: String) -> NSPasteboard.Name {
+        let pasteboardType = ["General": NSPasteboard.Name.general,
+                              "Drag": NSPasteboard.Name.drag,
+                              "Font": NSPasteboard.Name.font]
+        
+        guard let name = pasteboardType[type] else {
+            return .general
+        }
+        return name
+    }
+    
+    func setupPasteboardType(type: String) {
+        let boardType = getBoardType(type)
+        pasteInfo.infoList.removeAll()
+        print("setup \(boardType)")
+        pasteboard = NSPasteboard.init(name: boardType)
+        setupObserverTimer()
     }
     
     func setDataWithoutReserve(data: String, forType type: NSPasteboard.PasteboardType) {

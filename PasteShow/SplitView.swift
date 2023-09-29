@@ -30,6 +30,9 @@ struct SidebarView: View {
                     }
                 }
         }
+        .toolbar {
+            PickerView()
+        }
     }
 }
 
@@ -135,6 +138,23 @@ struct SourceView: View {
                     Text("Source")
                 }
             }
+        }
+    }
+}
+
+struct PickerView: View {
+    @EnvironmentObject var info: PasteInfoList
+    
+    var body: some View {
+        Picker(selection: $info.boardType) {
+            ForEach(Array(PasteboardType.allCases.enumerated()), id: \.1.rawValue) { index, type in
+                Text(type.rawValue)
+            }
+        } label: {
+            Text("\(info.boardType)")
+        }
+        .onReceive(info.$boardType) { type in
+            PasteboardManager.shared.setupPasteboardType(type: type)
         }
     }
 }
