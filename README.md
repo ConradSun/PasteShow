@@ -32,6 +32,7 @@ Right-click supports menus as below
 
 - Copying the selected type (click on the type of data)
 - Set the selected items to the current (click on the item in the sidebar)
+- Remove the selected items (click on the item in the sidebar)
 
 ## Download
 

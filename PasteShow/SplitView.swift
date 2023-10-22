@@ -27,6 +27,10 @@ struct SidebarView: View {
                             status.setIndex = 0
                             PasteboardManager.shared.refreshPasteItems(itemsIndex: index)
                         }
+                        Button("Remove this item") {
+                            status.setIndex = status.setIndex - 1
+                            PasteboardManager.shared.removePasteItem(itemsIndex: index)
+                        }
                     }
                 }
         }
@@ -50,7 +54,7 @@ struct ContentView: View {
     }
 
     var body: some View {
-        if info.infoList.isEmpty || info.infoList[0].copiedItems.isEmpty {
+        if info.infoList.isEmpty {
             Text("No Item")
         } else {
             let items = info.infoList[status.setIndex].copiedItems

@@ -147,4 +147,8 @@ class PasteboardManager {
         pasteInfo.infoList.remove(at: itemsIndex)
         pasteboard.writeObjects(pasteItems)
     }
+    
+    func removePasteItem(itemsIndex: Int) {
+        pasteInfo.infoList.remove(at: itemsIndex)
+    }
 }
