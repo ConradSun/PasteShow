@@ -28,7 +28,9 @@ struct SidebarView: View {
                             PasteboardManager.shared.refreshPasteItems(itemsIndex: index)
                         }
                         Button("Remove this item") {
-                            status.setIndex = status.setIndex - 1
+                            if status.setIndex >= index {
+                                status.setIndex = max(0, status.setIndex - 1)
+                            }
                             PasteboardManager.shared.removePasteItem(itemsIndex: index)
                         }
                     }
@@ -52,10 +54,20 @@ struct ContentView: View {
         
         return count
     }
+    
+    func resetStatus() {
+        status.setIndex = 0
+        status.itemIndex = 0
+        status.titleString = ""
+        status.subtitleString = ""
+    }
 
     var body: some View {
         if info.infoList.isEmpty {
             Text("No Item")
+                .onAppear {
+                    resetStatus()
+                }
         } else {
             let items = info.infoList[status.setIndex].copiedItems
             List(0 ..< items.count, id: \.self, selection: $status.itemIndex) { index in
@@ -85,31 +97,23 @@ struct DetailView: View {
     @EnvironmentObject var info: PasteInfoList
     @EnvironmentObject var status: NavigationStatus
 
-    func setupIndex() -> (Int, Int) {
-        if status.setIndex >= info.infoList.count {
-            return (-1, -1)
-        }
-        
-        var sectionIndex = -1
-        var itemIndex = -1
+    func calculateSectionAndItemIndex() -> (sectionIndex: Int, itemIndex: Int) {
+        let items = info.infoList[safe: status.setIndex]?.copiedItems ?? []
         var count = 0
-        var index = 0
         
-        for items in info.infoList[status.setIndex].copiedItems {
-            if status.itemIndex < count + items.count {
-                sectionIndex = index
-                itemIndex = status.itemIndex - count
-                break
+        for (index, sectionItems) in items.enumerated() {
+            let newCount = count + sectionItems.count
+            if status.itemIndex < newCount {
+                return (index, status.itemIndex - count)
             }
-            count = count + items.count
-            index = index + 1
+            count = newCount
         }
         
-        return (sectionIndex, itemIndex)
+        return (-1, -1)
     }
 
     var body: some View {
-        let (sectionIndex, itemIndex) = setupIndex()
+        let (sectionIndex, itemIndex) = calculateSectionAndItemIndex()
         if sectionIndex == -1 || itemIndex == -1 {
             Text("No Preview")
         } else {
@@ -125,8 +129,8 @@ struct SourceView: View {
     @EnvironmentObject var status: NavigationStatus
     
     var body: some View {
-        if !info.infoList.isEmpty {
-            let appUrl = info.infoList[status.setIndex].sourceURL!
+        if let appUrl = info.infoList[safe: status.setIndex]?.sourceURL,
+           let path = appUrl.path.removingPercentEncoding {
             VStack(alignment: .leading) {
                 Section {
                     Label {
@@ -134,8 +138,7 @@ struct SourceView: View {
                         Text(name.replacingOccurrences(of: ".app", with: ""))
                             .lineLimit(1)
                     } icon: {
-                        let path = appUrl.path().removingPercentEncoding
-                        Image(nsImage: NSWorkspace.shared.icon(forFile: path!))
+                        Image(nsImage: NSWorkspace.shared.icon(forFile: path))
                             .frame(height: 18)
                     }
                 } header: {
@@ -150,15 +153,20 @@ struct PickerView: View {
     @EnvironmentObject var info: PasteInfoList
     
     var body: some View {
-        Picker(selection: $info.boardType) {
+        Picker("Select Type", selection: $info.boardType) {
             ForEach(Array(PasteboardType.allCases.enumerated()), id: \.1.rawValue) { index, type in
-                Text(type.rawValue)
+                Text(type.rawValue).tag(type)
             }
-        } label: {
-            Text("\(info.boardType)")
         }
+        .pickerStyle(MenuPickerStyle())
         .onReceive(info.$boardType) { type in
             PasteboardManager.shared.setupPasteboardType(type: type)
         }
+    }
+}
+
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 }

@@ -30,7 +30,7 @@ class PasteInfoList: ObservableObject {
         var copiedItems = [[String: Data]]()
     }
     
-    @Published var boardType = "General"
+    @Published var boardType = PasteboardType.General
     @Published var infoList = [PasteInfo]()
     
     func appendInfo(source: URL, items: [[String: Data]], type: ItemType) {
@@ -47,21 +47,25 @@ class PasteboardManager {
     var changeCount = 0
     var pasteInfo = PasteInfoList()
     
-    private var pasteboard = NSPasteboard.init(name: .general)
+    private var pasteboard = NSPasteboard.general
     private var observerTimer = Timer()
     
     private init() {
         setupPasteboardType(type: pasteInfo.boardType)
     }
     
+    deinit {
+        observerTimer.invalidate()
+    }
+    
     private func setupObserverTimer() {
-        observerTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true, block: { [self] _ in
-            guard changeCount != pasteboard.changeCount else {
+        observerTimer.invalidate()
+        observerTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            guard self?.changeCount != self?.pasteboard.changeCount else {
                 return
             }
-            
-            onPasteboardChanged()
-        })
+            self?.onPasteboardChanged()
+        }
     }
     
     private func onPasteboardChanged() {
@@ -109,22 +113,10 @@ class PasteboardManager {
         pasteInfo.appendInfo(source: sourceURL!, items: copiedItems, type: itemType)
     }
     
-    private func getBoardType(_ type: String) -> NSPasteboard.Name {
-        let pasteboardType = ["General": NSPasteboard.Name.general,
-                              "Drag": NSPasteboard.Name.drag,
-                              "Font": NSPasteboard.Name.font]
-        
-        guard let name = pasteboardType[type] else {
-            return .general
-        }
-        return name
-    }
-    
-    func setupPasteboardType(type: String) {
-        let boardType = getBoardType(type)
+    func setupPasteboardType(type: PasteboardType) {
+        pasteboard = NSPasteboard(name: type.pasteboardName)
         pasteInfo.infoList.removeAll()
-        print("setup \(boardType)")
-        pasteboard = NSPasteboard.init(name: boardType)
+        print("setup \(type.rawValue)")
         setupObserverTimer()
     }
     
@@ -150,5 +142,16 @@ class PasteboardManager {
     
     func removePasteItem(itemsIndex: Int) {
         pasteInfo.infoList.remove(at: itemsIndex)
+    }
+}
+
+extension PasteboardType {
+    var pasteboardName: NSPasteboard.Name {
+        switch self {
+        case .General:
+            return .general
+        case .Drag:
+            return .drag
+        }
     }
 }

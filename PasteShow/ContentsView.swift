@@ -14,24 +14,31 @@ struct ContentsView: View {
     let itemType: String
     let itemData: Data
     
-    func getPlainTextView(text: String) -> some View {
-        GeometryReader(content: { geometry in
-            Text(text)
-                .padding(.leading, 4)
-            Spacer()
-                .frame(width: geometry.size.width)
-        })
+    func updateStatus(title: String, subtitle: String) {
+        status.titleString = title
+        status.subtitleString = subtitle
+    }
+    
+    func getPlainTextView(text: String?) -> some View {
+        GeometryReader { geometry in
+            if let text = text {
+                Text(text)
+                    .padding(.leading, 4)
+                Spacer()
+                    .frame(width: geometry.size.width)
+            } else {
+                Text("Unable to display text")
+            }
+        }
         .onAppear {
-            status.titleString = itemType
-            status.subtitleString = String("\(itemData.count.formatted(.byteCount(style: .file)))")
+            updateStatus(title: itemType, subtitle: "\(itemData.count.formatted(.byteCount(style: .file)))")
         }
     }
     
     func getRichTextView(attrText: NSAttributedString) -> some View {
         RichTextView(attrText: attrText)
             .onAppear {
-                status.titleString = itemType
-                status.subtitleString = String("\(itemData.count.formatted(.byteCount(style: .file)))")
+                updateStatus(title: itemType, subtitle: "\(itemData.count.formatted(.byteCount(style: .file)))")
             }
     }
 
@@ -57,14 +64,12 @@ struct ContentsView: View {
                 .aspectRatio(contentMode: .fit)
                 .frame(maxWidth: image.size.width, maxHeight: image.size.height)
                 .onAppear {
-                    status.titleString = itemType
-                    status.subtitleString = String("\(Int(image.size.width)) * \(Int(image.size.height)) pixel")
+                    updateStatus(title: itemType, subtitle: "\(Int(image.size.width)) * \(Int(image.size.height)) pixel")
                 }
         default:
             QuickLookView(data: itemData, type: utType)
                 .onAppear {
-                    status.titleString = itemType
-                    status.subtitleString = ""
+                    updateStatus(title: itemType, subtitle: "")
                 }
         }
     }
